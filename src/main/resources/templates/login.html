@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<style>
+    .password-container {
+        position: relative;
+    }
+
+    #password {
+        padding-right: 30px;
+    }
+
+    .toggle-password {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+    }
+
+    .toggle-password img {
+        width: 20px;
+        height: 20px;
+    }
+
+    .toggle-password:hover img {
+        box-shadow: 0 2px 7px rgba(0, 0, 0, 0.3);
+        border-radius: 85%;
+    }
+
+    .toggle-password.active img {
+        border-radius: 50%;
+        background-color: rgba(79, 70, 229, 0.4);
+    }
+</style>
+
+<head>
+    <title>Login</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100">
+<div class="flex flex-col justify-center lg:px-8 min-h-full px-6 py-8">
+    <div class="mt-5 mx-auto max-w-sm w-full">
+        <form class="bg-white overflow-hidden p-10 rounded-xl shadow-lg space-y-6" th:action="@{/login}" method="post">
+
+            <div class="sm:mx-auto sm:w-full sm:max-w-sm">
+                <img class="mx-auto h-40 w-50" th:src="@{/images/logo.png}" alt="logo">
+            </div>
+
+            <h4 class="font-bold leading-9 mt-10 text-center text-gray-900 text-xl
+            tracking-tight" id="text-institution">Selecione sua Instituição de Ensino</h4>
+
+            <div th:if="${param.error}" class="bg-rose-100 justify-center p-4 ring-1 ring-rose-200 rounded-md">
+                <p>Credenciais incorretas</p>
+            </div>
+
+            <div>
+                <label class="block text-sm font-bold leading-6 text-gray-900"
+                       for="institution">Selecione sua instituição de ensino</label>
+                <div class="mt-2">
+                    <select class="ring-1 block w-full rounded-md py-1.5 text-gray-900 shadow-sm border-0 ring-inset
+                     ring-gray-300 px-3 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600
+                     sm:text-sm sm:leading-6"
+                            id="institution" name="institution" onchange="cond((this.options[this.selectedIndex].value))" >
+                        <option value=""> </option>
+                        <option value="ueg">UEG</option>
+                        <option value="teste">TESTE</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label id="username-label" class="block text-sm font-bold leading-6 text-gray-900" for="username">Login</label>
+                <div class="mt-2">
+                    <input class="ring-1 block w-full rounded-md py-1.5 text-gray-900 shadow-sm border-0 ring-inset
+                    ring-gray-300 px-3 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600
+                    sm:text-sm sm:leading-6"
+                           id="username" name="username" type="text" placeholder="Login" required="required" maxlength="11"
+                           oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/(\..*?)\..*/g, '$1');"  >
+                </div>
+            </div>
+
+            <div>
+                <label id="password-label" class="block text-sm font-bold leading-6 text-gray-900" for="password">Senha</label>
+                <div class="mt-2 password-container">
+                    <input class="ring-1 block w-full rounded-md py-1.5 text-gray-900 shadow-sm border-0 ring-inset
+                         ring-gray-300 px-3 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600
+                         sm:text-sm sm:leading-6"
+                           id="password" name="password" type="password" placeholder="Senha" required="required">
+                    <span class="toggle-password" onclick="togglePassword()">
+                <img th:src="@{/images/olho.png}" alt="Mostrar Senha" id="toggle-icon">
+            </span>
+                </div>
+            </div>
+
+
+            <div>
+                <input class="bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white flex w-full
+                justify-center rounded-md  shadow-sm ring-1 ring-inset hover:bg-indigo-500 focus-visible:outline
+                focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                       type="submit" value="Entrar">
+            </div>
+
+        </form>
+    </div>
+</div>
+</body>
+
+<script th:inline="javascript">
+    function cond(select){
+        let apiUrl = /*[[${@environment.getProperty('saudation-phrase-ad')}]]*/ '';
+        if (select != null){
+            apiUrl = apiUrl.concat(select.toString().toUpperCase());
+            fetch(apiUrl)
+                .then(response =>{
+               return response.json()
+            }).then(fields =>{
+                console.log("status: ",fields.status)
+                if(fields.status === 200) {
+                    document.getElementById("text-institution").innerText = fields.saudationPhrase
+                    document.getElementById("password").placeholder = fields.passwordFieldName
+                    document.getElementById("password-label").innerText = fields.passwordFieldName
+                    document.getElementById("username").placeholder = fields.usernameFieldName
+                    document.getElementById("username-label").innerText = fields.usernameFieldName
+                }else{
+                    document.getElementById("text-institution").innerText = fields.message
+                    document.getElementById("password").placeholder = "Senha"
+                    document.getElementById("password-label").innerText = "Senha"
+                    document.getElementById("username").placeholder = "Login"
+                    document.getElementById("username-label").innerText = "Login"
+                }
+            }).catch(error =>{
+                document.getElementById("text-institution").innerText = error.message;
+            })
+        }
+        document.getElementById("text-institution").innerText = "Selecione sua Instituição de Ensino"
+    }
+</script>
+
+<script>
+    function togglePassword() {
+        var passwordField = document.getElementById("password");
+        var toggleIcon = document.getElementById("toggle-icon");
+        var togglePasswordButton = document.querySelector(".toggle-password");
+
+        if (passwordField.type === "password") {
+            passwordField.type = "text";
+            toggleIcon.alt = "Ocultar Senha";
+            togglePasswordButton.classList.add("active");
+        } else {
+            passwordField.type = "password";
+            toggleIcon.alt = "Mostrar Senha";
+            togglePasswordButton.classList.remove("active");
+        }
+    }
+</script>
+</html>
